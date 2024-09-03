@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+            integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+            crossorigin="anonymous"></script>
+        <title>Movie Management</title>
+    </head>
+
+    <body>
+        <div class="container mt-5">
+
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title text-center">Movies List</h4>
+                    <div id="movie-list" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                    </div>
+
+                </div>
+            </div>
+            <button class="d-block mx-auto mt-5 btn btn-primary btn-sm" data-bs-toggle="modal"
+                data-bs-target="#addMovieModal">Add
+                Movie</button>
+        </div>
+
+        <div class="modal fade" id="addMovieModal" tabindex="-1" aria-labelledby="addMovieModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addMovieModalLabel">Add Movie</h5>
+                    </div>
+                    <div class="modal-body">
+                        <form id="addMovieForm">
+                            <div class="mb-3">
+                                <label for="movie_name" class="form-label">Movie Name</label>
+                                <input type="text" class="form-control" id="movie_name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="movie_images" class="form-label">Movie Image</label>
+                                <input type="file" class="form-control" id="movie_images" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="movie_price" class="form-label">Movie Price</label>
+                                <input type="text" class="form-control" id="movie_price" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="movie_desc" class="form-label">Movie Description</label>
+                                <input type="text" class="form-control" id="movie_desc" required>
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="addData()"
+                                data-bs-dismiss="modal">Add</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <div class="modal fade" id="updateMovieModal" tabindex="-1" aria-labelledby="updateMovieModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="updateMovieModalLabel">Update Movie</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="updateMovieForm">
+                            <input type="hidden" id="update_movie_id">
+                            <div class="mb-3">
+                                <label for="update_movie_name" class="form-label">Movie Name</label>
+                                <input type="text" class="form-control" id="update_movie_name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="update_movie_images" class="form-label">Movie Image</label>
+                                <input type="file" class="form-control" id="update_movie_images">
+                            </div>
+                            <div class="mb-3">
+                                <label for="update_movie_price" class="form-label">Movie Price</label>
+                                <input type="text" class="form-control" id="update_movie_price" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="update_movie_desc" class="form-label">Movie Description</label>
+                                <input type="text" class="form-control" id="update_movie_desc" required>
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="updateMovie()"
+                                data-bs-dismiss="modal">Update</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+
+            let addData = async () => {
+                let formData = new FormData();
+                formData.append("movie_name", document.getElementById("movie_name").value);
+                formData.append("movie_images", document.getElementById("movie_images").files[0]);
+                formData.append("movie_price", document.getElementById("movie_price").value);
+                formData.append("movie_desc", document.getElementById("movie_desc").value);
+
+                try {
+                    const res = await fetch("http://localhost:3001/v1/movie/create", {
+                        method: "POST",
+                        body: formData
+                    });
+                    const response = await res.json();
+                    console.log(response);
+                    data();
+                } catch (error) {
+                    console.error("Error adding movie:", error);
+                }
+            }
+
+            async function data() {
+                try {
+                    let movie = await fetch("http://localhost:3001/v1/movie/get");
+                    let res = await movie.json();
+                    console.log(res);
+
+                    let movieList = document.getElementById("movie-list");
+                    movieList.innerHTML = res.movie.map(val =>
+                        `<div class="col">
+                <div class="card h-100">
+                    <img src="${val.movie_images}" class="card-img-top" alt="${val.movie_name}" style="max-height: 200px; object-fit: cover;">
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-capitalize">${val.movie_name}</h5>
+                        <p class="card-text text-capitalize">${val.movie_desc}</p>
+                        <p class="card-text"><strong>Price:</strong> ${val.movie_price} Rs.</p>
+                    </div>
+                    <div class="card-footer text-center">
+                        <button onclick="deleteMovie('${val._id}')" class="btn btn-danger btn-sm">Delete</button>
+                        <button onclick="viewData('${val._id}')" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#updateMovieModal">Update</button>
+                    </div>
+                </div>
+            </div>`
+                    ).join('');
+                } catch (error) {
+                    console.error("Error fetching movies:", error);
+                }
+            }
+
+            async function deleteMovie(id) {
+                try {
+                    const res = await fetch(`http://localhost:3001/v1/movie/delete/${id}`, {
+                        method: "DELETE"
+                    });
+                    const response = await res.json();
+                    console.log(response);
+                    data();t
+                } catch (error) {
+                    console.error("Error deleting movie:", error);
+                }
+            }
+
+            let viewData = async (id) => {
+
+                try {
+                    let res = await fetch(`http://localhost:3001/v1/movie/get/${id}`);
+                    let response = await res.json();
+                    console.log(response);
+
+                    document.getElementById("update_movie_id").value = response.movie._id;
+                    document.getElementById("update_movie_name").value = response.movie.movie_name;
+                    document.getElementById("update_movie_price").value = response.movie.movie_price;
+                    document.getElementById("update_movie_desc").value = response.movie.movie_desc;
+
+
+                } catch (error) {
+                    console.error("Error fetching movie details:", error);
+                }
+            }
+
+            let updateMovie = async () => {
+
+                let movieId = document.getElementById("update_movie_id").value;
+                let formData = new FormData();
+                formData.append("movie_name", document.getElementById("update_movie_name").value);
+                formData.append("movie_images", document.getElementById("update_movie_images").files[0]);
+                formData.append("movie_price", document.getElementById("update_movie_price").value);
+                formData.append("movie_desc", document.getElementById("update_movie_desc").value);
+
+                try {
+                    const res = await fetch(`http://localhost:3001/v1/movie/update/${movieId}`, {
+                        method: "PUT",
+                        body: formData
+                    });
+                    console.log(movieId);
+
+                    const response = await res.json();
+                    console.log(response);
+                    data();
+                } catch (error) {
+                    console.error("Error updating movie:", error);
+                }
+            }
+            data();
+
+        </script>
+    </body>
+
+</html>
